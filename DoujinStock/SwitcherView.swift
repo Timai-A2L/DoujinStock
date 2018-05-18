@@ -7,33 +7,31 @@
 
 import UIKit
 
+protocol SwitcherViewDelegate: class {
+  func switcherView(_ switcherView: SwitcherView, didTapOnContainer container: ContainerView, at index: Int)
+}
+
 class SwitcherView: UIScrollView {
   
-  static let enableUserInteractionInSwitcher = true
+  weak var switcherDelegate: SwitcherViewDelegate?
   
-  var containerViews: [ContainerView] = []
+  private weak var fullScreenContainerView: ContainerView?
+  private(set) var containerViews: [ContainerView] = []
   
-  let angle: CGFloat = 55.0
-  let scaleOut: CGFloat = 0.8
+  private let thumbnailAngle: CGFloat = 55.0
+  private let thumbnailScaleOut: CGFloat = 0.8
   
-  var switcherViewPadding: CGFloat = 0.0
-  let separatorDivisor: CGFloat = 3.0
-  var saveContentSize: CGSize!
-  
-  var translationDivisor: CGFloat {
-    get {
-      if UIDevice.current.userInterfaceIdiom == .pad {
-        return 4.46
-      } else {
-        return 4.13
-      }
-    }
+  private let separatorDivisor: CGFloat = 3.0
+  private var switcherViewPadding: CGFloat {
+    return bounds.height / separatorDivisor
   }
   
-  let imageName: String = "image1.jpeg"
-  var image: UIImage!
+  enum ContainerViewFullScreenSettingError: Error {
+    case tryingToFullscreenAnotherContainerViewWhileAlreadyAContainerViewInFullScreenMode
+    case tryingToRetractWithoutButNoContainerViewIsInFullScreen
+    case tryingToSetAContainerViewWhichIsNotInContainerViewsHierarchy
+  }
   
-
   override init(frame: CGRect) {
     super.init(frame: frame)
     standardInitialize()
@@ -44,92 +42,173 @@ class SwitcherView: UIScrollView {
     standardInitialize()
   }
   
-  func standardInitialize() {
+  override func layoutSubviews() {
+    super.layoutSubviews()
+    
+    for (i, container) in containerViews.enumerated() {
+      let shouldLayoutAsThumbnail = !(container == fullScreenContainerView)
+      layoutContainer(container, at: i, asThumbnail: shouldLayoutAsThumbnail)
+    }
+    
+    updateContentSize()
+    
+  }
+  
+}
+
+extension SwitcherView {
+  
+  private func standardInitialize() {
+    
     layer.backgroundColor = UIColor.darkGray.cgColor
-    
-    //image = UIImage(named: imageName)
-    //imageView = UIImageView(image: image)
-    //imageView.frame = CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height)
-    //imageView.layer.transform = getTransform(translatedToX: 0, isScale:true, isRotate:true)
-    
-    switcherViewPadding = bounds.size.height / separatorDivisor
     isUserInteractionEnabled = true
     minimumZoomScale = 1.0
     maximumZoomScale = 1.0
     isScrollEnabled = true
-    contentSize = CGSize(width: bounds.size.width, height: bounds.size.height)
     
-    addContainerView(ContainerView(frame: bounds,
-                                   parentView: self,
-                                   imageName: "image1.jpeg"))
   }
   
-  func radians(degree: CGFloat) -> CGFloat {
-    return degree * CGFloat.pi / 180.0
-  }
-  
-  func addContainerView(_ view: ContainerView) {
-    view.layer.shadowColor = UIColor.black.cgColor
-    view.frame = CGRect(x: CGFloat(subviews.count) * switcherViewPadding,
-                        y: 0.0,
-                        width: frame.size.width,
-                        height: frame.size.height)
-    addSubview(view)
-    view.index = containerViews.count
-    containerViews.append(view)
-    view.layer.transform = getTransform(translatedToX: 0, isScale: true, isRotate: true)
-    contentSize = CGSize(width: contentSize.width + switcherViewPadding,
-                         height:contentSize.height)
-  }
-  
-  func getTransform(translatedToX: CGFloat, isScale: Bool, isRotate: Bool) -> CATransform3D {
-    var transform = CATransform3DIdentity
-    transform.m34 = 1.0 / -2000.0
-    if isRotate {
-      transform = CATransform3DRotate(transform, -radians(degree: angle), 1.0, 0.0, 0.0)
-    }
-    if isScale {
-      transform = CATransform3DScale(transform, scaleOut, scaleOut, scaleOut)
-    }
-    if translatedToX != 0 {
-      transform = CATransform3DTranslate(transform, translatedToX, 0.0, 0.0)
-    }
-    return transform
-  }
-  
-  func animate(transform: CATransform3D, view: UIView) {
-    let basicAnim = CABasicAnimation(keyPath: "transform")
-    basicAnim.fromValue = view.layer.transform
-    basicAnim.toValue = transform
-    view.layer.add(basicAnim, forKey: nil)
-    CATransaction.setDisableActions(true)
-    view.layer.transform = transform
-    CATransaction.setDisableActions(false)
-  }
-  
-  func animate(view: ContainerView, isFullScreen: Bool) {
-    if isFullScreen {
-      for i in 0..<view.index {
-        animate(transform: getTransform(translatedToX: -bounds.size.width, isScale: true, isRotate: false), view: containerViews[i])
-      }
-      animate(transform: getTransform(translatedToX: contentOffset.x,
-                                      isScale: false, isRotate: false), view: view)
-      for i in (view.index+1)..<containerViews.count {
-        animate(transform: getTransform(translatedToX: 2.0 * bounds.size.width,
-                                        isScale: true, isRotate: true), view: containerViews[i])
-      }
+  private func getContainerFrame(at index: Int, isForThumbnail: Bool) -> CGRect {
+    
+    if isForThumbnail {
+      let containerX: CGFloat = CGFloat(index) * (bounds.width + switcherViewPadding)
+      let containerOrigin: CGPoint = .init(x: containerX, y: 0)
+      return .init(origin: containerOrigin, size: bounds.size)
+      
     } else {
-      for i in 0..<view.index {
-        animate(transform: getTransform(translatedToX: 0.0,
-                                        isScale: true, isRotate: true), view: containerViews[i])
-      }
-      animate(transform: getTransform(translatedToX: 0.0,
-                                      isScale: true, isRotate: true), view: view)
-      //scrollView.contentSize = saveContentSize
-      for i in (view.index + 1)..<containerViews.count {
-        animate(transform: getTransform(translatedToX: 0.0,
-                                        isScale: true, isRotate: true), view: containerViews[i])
-      }
+      return bounds
     }
+    
   }
+  
+  private func getContainerTransform(isForThumbnail: Bool) -> CATransform3D {
+    
+    var baseTransform = CATransform3DIdentity
+    
+    if isForThumbnail {
+      baseTransform.m34 = 1.0 / -2000.0
+      baseTransform = CATransform3DRotate(baseTransform, -thumbnailAngle.toRadians, 1.0, 0.0, 0.0)
+      baseTransform = CATransform3DScale(baseTransform, thumbnailScaleOut, thumbnailScaleOut, thumbnailScaleOut)
+      
+    } else {
+      // Do nothing, just return the identity transform
+    }
+    
+    return baseTransform
+  }
+  
+  private func layoutContainer(_ containerView: UIView, at index: Int, asThumbnail: Bool) {
+    
+    let containerFrame = getContainerFrame(at: index, isForThumbnail: asThumbnail)
+    let containerLayerTransform = getContainerTransform(isForThumbnail: asThumbnail)
+    containerView.frame = containerFrame
+    containerView.layer.transform = containerLayerTransform
+    
+  }
+  
+  private func updateContentSize() {
+    
+    let containersSize = containerViews.reduce(into: CGSize()) { (result, container) in
+      result.width = max(result.width, container.frame.maxX)
+      result.height = max(result.height, container.frame.maxY)
+    }
+    
+    contentSize = containersSize
+    
+  }
+  
+}
+
+extension SwitcherView {
+  
+  func addContainer(imageName: String) {
+    
+    let containerView = ContainerView(imageName: imageName)
+    containerView.layer.shadowColor = UIColor.black.cgColor
+    containerView.delegate = self
+    
+    addSubview(containerView)
+    containerViews.append(containerView)
+    
+  }
+  
+  func displayContainerViewInFullScreen(at index: Int, animated: Bool) throws {
+    
+    guard fullScreenContainerView == nil else {
+      throw ContainerViewFullScreenSettingError.tryingToFullscreenAnotherContainerViewWhileAlreadyAContainerViewInFullScreenMode
+    }
+    
+    guard containerViews.indices.contains(index) else {
+      throw ContainerViewFullScreenSettingError.tryingToSetAContainerViewWhichIsNotInContainerViewsHierarchy
+    }
+    
+    let containerView = containerViews[index]
+    fullScreenContainerView = containerView
+    
+    let asThumbnail = false
+    
+    if animated {
+      UIView.animate(withDuration: 0.3) {
+        self.layoutContainer(containerView, at: index, asThumbnail: asThumbnail)
+      }
+      
+    } else {
+      layoutContainer(containerView, at: index, asThumbnail: asThumbnail)
+    }
+    
+  }
+  
+  func retractContainerViewFromFullScreen(animated: Bool) throws {
+    
+    guard let containerView = fullScreenContainerView else {
+      throw ContainerViewFullScreenSettingError.tryingToRetractWithoutButNoContainerViewIsInFullScreen
+    }
+    
+    guard let index = containerViews.index(of: containerView) else {
+      throw ContainerViewFullScreenSettingError.tryingToSetAContainerViewWhichIsNotInContainerViewsHierarchy
+    }
+    
+    fullScreenContainerView = nil
+    
+    let asThumbnail = true
+    
+    if animated {
+      UIView.animate(withDuration: 0.3) {
+        self.layoutContainer(containerView, at: index, asThumbnail: asThumbnail)
+      }
+      
+    } else {
+      layoutContainer(containerView, at: index, asThumbnail: asThumbnail)
+    }
+    
+  }
+  
+}
+
+extension SwitcherView: ContainerViewDelegate {
+  
+  func containerViewDidTap(_ containerView: ContainerView) {
+    
+    guard let switcherDelegate = self.switcherDelegate else {
+      assertionFailure("switcher delegate is not set yet")
+      return
+    }
+    
+    guard let index = containerViews.index(of: containerView) else {
+      assertionFailure("ContainerView \(containerView) has not been added to the container view hierarchy yet.")
+      return
+    }
+    
+    switcherDelegate.switcherView(self, didTapOnContainer: containerView, at: index)
+    
+  }
+  
+}
+
+private extension CGFloat {
+  
+  var toRadians: CGFloat {
+    return self * .pi / 180
+  }
+  
 }
