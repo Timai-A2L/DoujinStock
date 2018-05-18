@@ -7,12 +7,10 @@
 
 import UIKit
 
-class SwitcherView: UIView, UIScrollViewDelegate {
+class SwitcherView: UIScrollView {
   
   static let enableUserInteractionInSwitcher = true
   
-  var scrollView: UIScrollView!
-  var imageView: UIImageView!
   var containerViews: [ContainerView] = []
   
   let angle: CGFloat = 55.0
@@ -55,17 +53,11 @@ class SwitcherView: UIView, UIScrollViewDelegate {
     //imageView.layer.transform = getTransform(translatedToX: 0, isScale:true, isRotate:true)
     
     switcherViewPadding = bounds.size.height / separatorDivisor
-    scrollView = UIScrollView(frame: bounds)
-    scrollView.isUserInteractionEnabled = true
-    scrollView.minimumZoomScale = 1.0
-    scrollView.maximumZoomScale = 1.0
-    scrollView.isScrollEnabled = true
-    scrollView.contentSize = CGSize(width: bounds.size.width, height: bounds.size.height)
-    scrollView.delegate = self
-    
-    
-    addSubview(scrollView)
-    //scrollView.addSubview(imageView)
+    isUserInteractionEnabled = true
+    minimumZoomScale = 1.0
+    maximumZoomScale = 1.0
+    isScrollEnabled = true
+    contentSize = CGSize(width: bounds.size.width, height: bounds.size.height)
     
     addContainerView(ContainerView(frame: bounds,
                                    parentView: self,
@@ -78,16 +70,16 @@ class SwitcherView: UIView, UIScrollViewDelegate {
   
   func addContainerView(_ view: ContainerView) {
     view.layer.shadowColor = UIColor.black.cgColor
-    view.frame = CGRect(x: CGFloat(scrollView.subviews.count) * switcherViewPadding,
+    view.frame = CGRect(x: CGFloat(subviews.count) * switcherViewPadding,
                         y: 0.0,
                         width: frame.size.width,
                         height: frame.size.height)
-    scrollView.addSubview(view)
+    addSubview(view)
     view.index = containerViews.count
     containerViews.append(view)
     view.layer.transform = getTransform(translatedToX: 0, isScale: true, isRotate: true)
-    scrollView.contentSize = CGSize(width: scrollView.contentSize.width + switcherViewPadding,
-                                    height:scrollView.contentSize.height)
+    contentSize = CGSize(width: contentSize.width + switcherViewPadding,
+                         height:contentSize.height)
   }
   
   func getTransform(translatedToX: CGFloat, isScale: Bool, isRotate: Bool) -> CATransform3D {
@@ -120,10 +112,8 @@ class SwitcherView: UIView, UIScrollViewDelegate {
       for i in 0..<view.index {
         animate(transform: getTransform(translatedToX: -bounds.size.width, isScale: true, isRotate: false), view: containerViews[i])
       }
-      animate(transform: getTransform(translatedToX: scrollView.contentOffset.x,
+      animate(transform: getTransform(translatedToX: contentOffset.x,
                                       isScale: false, isRotate: false), view: view)
-      //saveContentSize = scrollView.contentSize
-      //scrollView.contentSize = CGSize(width: bounds.size.width, height: bounds.size.height)
       for i in (view.index+1)..<containerViews.count {
         animate(transform: getTransform(translatedToX: 2.0 * bounds.size.width,
                                         isScale: true, isRotate: true), view: containerViews[i])

@@ -56,7 +56,7 @@ class ContainerView: UIView, UIGestureRecognizerDelegate {
   @objc func toggleAnimation() {
     isFullScreen = !isFullScreen
     parentView.animate(view: self, isFullScreen: isFullScreen)
-    parentView.scrollView.isScrollEnabled = !isFullScreen
+    parentView.isScrollEnabled = !isFullScreen
     if !SwitcherView.enableUserInteractionInSwitcher {
       for subView in subviews {
         subView.isUserInteractionEnabled = isFullScreen
