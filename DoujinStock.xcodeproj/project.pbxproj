@@ -19,6 +19,7 @@
 		31FF84762031E41E009FBFDE /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 31FF84742031E41E009FBFDE /* LaunchScreen.storyboard */; };
 		31FF84812031E41E009FBFDE /* DoujinStockTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FF84802031E41E009FBFDE /* DoujinStockTests.swift */; };
 		31FF848C2031E41E009FBFDE /* DoujinStockUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31FF848B2031E41E009FBFDE /* DoujinStockUITests.swift */; };
+		79D10B5620AF2DC100B54CD5 /* SwitcherViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79D10B5520AF2DC100B54CD5 /* SwitcherViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,6 +58,7 @@
 		31FF84872031E41E009FBFDE /* DoujinStockUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DoujinStockUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		31FF848B2031E41E009FBFDE /* DoujinStockUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoujinStockUITests.swift; sourceTree = "<group>"; };
 		31FF848D2031E41E009FBFDE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		79D10B5520AF2DC100B54CD5 /* SwitcherViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SwitcherViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +115,7 @@
 				319B8ACD209E493500F8B898 /* image1.jpeg */,
 				31FF84682031E41E009FBFDE /* AppDelegate.swift */,
 				31FF846A2031E41E009FBFDE /* ViewController.swift */,
+				79D10B5520AF2DC100B54CD5 /* SwitcherViewController.swift */,
 				31AF0CA420975C1700A43853 /* SwitcherView.swift */,
 				319B8ACF20A33F7100F8B898 /* ContainerView.swift */,
 				31FF846C2031E41E009FBFDE /* Main.storyboard */,
@@ -283,6 +286,7 @@
 				31AF0CA520975C1700A43853 /* SwitcherView.swift in Sources */,
 				31FF846B2031E41E009FBFDE /* ViewController.swift in Sources */,
 				31FF84692031E41E009FBFDE /* AppDelegate.swift in Sources */,
+				79D10B5620AF2DC100B54CD5 /* SwitcherViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

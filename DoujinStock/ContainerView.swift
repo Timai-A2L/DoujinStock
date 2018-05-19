@@ -7,60 +7,51 @@
 
 import UIKit
 
-class ContainerView: UIView, UIGestureRecognizerDelegate {
+protocol ContainerViewDelegate: class {
+  func containerViewDidTap(_ containerView: ContainerView)
+}
+
+class ContainerView: UIView {
   
-  var saveOriginX: CGFloat = 0.0
-  var parentView: SwitcherView
-  var isFullScreen: Bool = false
-  var index: Int = 0
-  var savedTranform: CATransform3D = CATransform3DIdentity
-  var tapRecognizer: UITapGestureRecognizer!
+  weak var delegate: ContainerViewDelegate?
   
-  convenience init(frame: CGRect, parentView: SwitcherView, imageName: String) {
-    self.init(frame: frame, parentView: parentView)
-    self.layer.contents = UIImage(named: imageName)!.cgImage!
+  convenience init(imageName: String) {
+    self.init(frame: .zero, imageName: imageName)
   }
   
-  init(frame: CGRect, parentView: SwitcherView) {
-    self.parentView = parentView
+  init(frame: CGRect, imageName: String) {
+    
     super.init(frame: frame)
-    self.parentView = parentView
-    saveOriginX = frame.origin.x
     
-    tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(toggleAnimation))
+    let tapRecognizer = UITapGestureRecognizer(target: self, action: #selector(didTap(sender:)))
     tapRecognizer.numberOfTapsRequired = 1
-    
     addGestureRecognizer(tapRecognizer)
-    tapRecognizer.delegate = self
+    
+    if let layerContent = UIImage(named: imageName)?.cgImage {
+      layer.contents = layerContent
+    }
     
     layer.shadowColor = UIColor.black.cgColor
     layer.shadowOpacity = 0.5
     layer.shadowPath = UIBezierPath(rect: bounds).cgPath
     layer.shadowRadius = 20.0
+    layer.edgeAntialiasingMask = [.layerLeftEdge, .layerRightEdge, .layerBottomEdge, .layerTopEdge]
     
-    layer.edgeAntialiasingMask = CAEdgeAntialiasingMask(rawValue:
-    CAEdgeAntialiasingMask.layerLeftEdge.rawValue |
-    CAEdgeAntialiasingMask.layerRightEdge.rawValue |
-    CAEdgeAntialiasingMask.layerBottomEdge.rawValue |
-    CAEdgeAntialiasingMask.layerTopEdge.rawValue)
   }
   
   required init?(coder aDecoder: NSCoder) {
     fatalError("init(coder:) has not been implemented")
   }
   
-  func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith shouldRecognizeSimulataneouslyWithGestureRecognizer: UIGestureRecognizer) -> Bool {
-    return true
+  @objc private func didTap(sender: UITapGestureRecognizer) {
+    
+    guard let delegate = self.delegate else {
+      assertionFailure("delegate is not set yet")
+      return
+    }
+    
+    delegate.containerViewDidTap(self)
+    
   }
   
-  @objc func toggleAnimation() {
-    isFullScreen = !isFullScreen
-    parentView.animate(view: self, isFullScreen: isFullScreen)
-    parentView.scrollView.isScrollEnabled = !isFullScreen
-    if !SwitcherView.enableUserInteractionInSwitcher {
-      for subView in subviews {
-        subView.isUserInteractionEnabled = isFullScreen
-      }
-    }
-  }
 }
