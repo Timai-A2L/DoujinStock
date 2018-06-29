@@ -34,6 +34,9 @@ class SwitcherViewController: UIViewController {
     super.viewDidLoad()
     // TODO: Separate books to a model
     switcherView.addContainer(imageName: "image1.jpeg")
+    switcherView.addContainer(imageName: "image2.jpeg")
+    switcherView.addContainer(imageName: "image3.JPG")
+    
   }
   
 }

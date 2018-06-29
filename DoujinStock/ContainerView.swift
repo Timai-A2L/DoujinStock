@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import AVFoundation
 
 protocol ContainerViewDelegate: class {
   func containerViewDidTap(_ containerView: ContainerView)
@@ -14,6 +15,8 @@ protocol ContainerViewDelegate: class {
 class ContainerView: UIView {
   
   weak var delegate: ContainerViewDelegate?
+  
+  let imageView:UIImageView! = UIImageView()
   
   convenience init(imageName: String) {
     self.init(frame: .zero, imageName: imageName)
@@ -27,16 +30,23 @@ class ContainerView: UIView {
     tapRecognizer.numberOfTapsRequired = 1
     addGestureRecognizer(tapRecognizer)
     
-    if let layerContent = UIImage(named: imageName)?.cgImage {
-      layer.contents = layerContent
-    }
+    imageView.image = UIImage(named:imageName)
+    imageView.frame = CGRect(x: 0, y: 0, width: UIScreen.main.bounds.size.width, height: UIScreen.main.bounds.size.height)
+    imageView.contentMode = UIViewContentMode.scaleAspectFit
+    addSubview(imageView)
     
-    layer.shadowColor = UIColor.black.cgColor
-    layer.shadowOpacity = 0.5
-    layer.shadowPath = UIBezierPath(rect: bounds).cgPath
-    layer.shadowRadius = 20.0
-    layer.edgeAntialiasingMask = [.layerLeftEdge, .layerRightEdge, .layerBottomEdge, .layerTopEdge]
     
+//    if let layerContent = UIImage(named:imageName)?.cgImage {
+//      layer.contents = layerContent
+//    }
+    let imageSize: CGRect = AVMakeRect(aspectRatio: imageView.image!.size, insideRect: imageView.bounds)
+
+    imageView.layer.shadowColor = UIColor.black.cgColor
+    imageView.layer.shadowOpacity = 0.5
+    imageView.layer.shadowPath = UIBezierPath(rect: CGRect(x: imageSize.minX, y: imageSize.minY,
+                                                           width: imageSize.size.width + 30, height: imageSize.size.height + 20)).cgPath
+    imageView.layer.shadowRadius = 20.0
+    imageView.layer.edgeAntialiasingMask = [.layerLeftEdge, .layerRightEdge, .layerBottomEdge, .layerTopEdge]
   }
   
   required init?(coder aDecoder: NSCoder) {

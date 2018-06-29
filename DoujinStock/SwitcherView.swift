@@ -19,11 +19,11 @@ class SwitcherView: UIScrollView {
   private(set) var containerViews: [ContainerView] = []
   
   private let thumbnailAngle: CGFloat = 55.0
-  private let thumbnailScaleOut: CGFloat = 0.8
+  private let thumbnailScaleOut: CGFloat = 0.9
   
-  private let separatorDivisor: CGFloat = 3.0
+  private let separatorDivisor: CGFloat = 4.0
   private var switcherViewPadding: CGFloat {
-    return bounds.height / separatorDivisor
+    return bounds.width / separatorDivisor
   }
   
   enum ContainerViewFullScreenSettingError: Error {
@@ -71,12 +71,14 @@ extension SwitcherView {
   private func getContainerFrame(at index: Int, isForThumbnail: Bool) -> CGRect {
     
     if isForThumbnail {
-      let containerX: CGFloat = CGFloat(index) * (bounds.width + switcherViewPadding)
+//      let containerX: CGFloat = CGFloat(index) * (bounds.width + switcherViewPadding)
+      let containerX: CGFloat = CGFloat(index) * switcherViewPadding
       let containerOrigin: CGPoint = .init(x: containerX, y: 0)
       return .init(origin: containerOrigin, size: bounds.size)
       
     } else {
-      return bounds
+//      return bounds
+      return CGRect(x: bounds.minX, y: bounds.minY, width: bounds.size.width, height: bounds.size.height)
     }
     
   }
@@ -87,7 +89,7 @@ extension SwitcherView {
     
     if isForThumbnail {
       baseTransform.m34 = 1.0 / -2000.0
-      baseTransform = CATransform3DRotate(baseTransform, -thumbnailAngle.toRadians, 1.0, 0.0, 0.0)
+      baseTransform = CATransform3DRotate(baseTransform, 1.0, 0.0, -thumbnailAngle.toRadians, 0.0)
       baseTransform = CATransform3DScale(baseTransform, thumbnailScaleOut, thumbnailScaleOut, thumbnailScaleOut)
       
     } else {
@@ -95,6 +97,20 @@ extension SwitcherView {
     }
     
     return baseTransform
+  }
+  
+  private func setIsHidden(at index: Int, isForThumbnail: Bool) {
+    if isForThumbnail {
+      for viewCount in 0 ..< containerViews.count {
+        containerViews[viewCount].isHidden = false
+      }
+    } else {
+      for viewCount in 0 ..< containerViews.count {
+        if viewCount != index {
+          containerViews[viewCount].isHidden = true
+        }
+      }
+    }
   }
   
   private func layoutContainer(_ containerView: UIView, at index: Int, asThumbnail: Bool) {
@@ -124,10 +140,11 @@ extension SwitcherView {
   func addContainer(imageName: String) {
     
     let containerView = ContainerView(imageName: imageName)
-    containerView.layer.shadowColor = UIColor.black.cgColor
+//    containerView.layer.shadowColor = UIColor.black.cgColor
     containerView.delegate = self
     
     addSubview(containerView)
+    sendSubview(toBack: containerView)
     containerViews.append(containerView)
     
   }
@@ -156,6 +173,8 @@ extension SwitcherView {
       layoutContainer(containerView, at: index, asThumbnail: asThumbnail)
     }
     
+    setIsHidden(at: index, isForThumbnail: asThumbnail)
+    
   }
   
   func retractContainerViewFromFullScreen(animated: Bool) throws {
@@ -181,6 +200,7 @@ extension SwitcherView {
       layoutContainer(containerView, at: index, asThumbnail: asThumbnail)
     }
     
+    setIsHidden(at: index, isForThumbnail: asThumbnail)
   }
   
 }

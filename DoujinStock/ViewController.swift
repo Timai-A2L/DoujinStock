@@ -13,6 +13,7 @@ class ViewController: UIViewController {
   
   override func viewDidAppear(_ animated: Bool) {
     super.viewDidAppear(animated)
+    
     present(switcherViewController, animated: false, completion: nil)
   }
   
